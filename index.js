@@ -12,7 +12,8 @@ const client = new Client({
 });
 
 const OWNER_IDS = ['1347611047338709052'];
-const CHANNEL_ID = '1398959087592673370','1399332860175056987';
+const CHANNEL_IDS = ['1398959087592673370', '1399332860175056987'];
+
 const cooldown = new Map();
 
 client.once('ready', () => {
