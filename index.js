@@ -14,8 +14,6 @@ const client = new Client({
 const OWNER_IDS = ['1347611047338709052'];
 const CHANNEL_IDS = ['1398959087592673370', '1399332860175056987'];
 
-const cooldown = new Map();
-
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
@@ -28,22 +26,12 @@ client.on('interactionCreate', async interaction => {
   const uid = interaction.options.getString('uid');
   const region = interaction.options.getString('region');
 
-  if (interaction.channel.id !== CHANNEL_ID) {
+  if (!CHANNEL_IDS.includes(interaction.channel.id)) {
     return interaction.reply({ content: 'This command is not allowed in this channel.', ephemeral: true });
   }
+
   if (!/^\d+$/.test(uid) || !/^[a-zA-Z]+$/.test(region)) {
     return interaction.reply({ content: 'UID must be numbers and region must only contain letters.', ephemeral: true });
-  }
-
-  if (!OWNER_IDS.includes(interaction.user.id)) {
-    const last = cooldown.get(interaction.user.id), now = Date.now();
-    if (last && now - last < 86400000) {
-      const diff = 86400000 - (now - last);
-      const h = Math.floor(diff / 3600000),
-            m = Math.floor((diff % 3600000) / 60000);
-      return interaction.reply({ content: `⏳ Try again in ${h}h ${m}m.`, ephemeral: true });
-    }
-    cooldown.set(interaction.user.id, now);
   }
 
   await interaction.deferReply();
@@ -102,17 +90,6 @@ client.on('messageCreate', async message => {
   if (!region || !uid) return message.reply('❌ Usage: `!like <region> <uid>`');
   if (!/^\d+$/.test(uid)) return message.reply('❌ UID must be numeric.');
   if (!/^[a-zA-Z]+$/.test(region)) return message.reply('❌ Region must only contain letters.');
-
-  if (!OWNER_IDS.includes(message.author.id)) {
-    const last = cooldown.get(message.author.id), now = Date.now();
-    if (last && now - last < 86400000) {
-      const diff = 86400000 - (now - last);
-      const h = Math.floor(diff / 3600000),
-            m = Math.floor((diff % 3600000) / 60000);
-      return message.reply(`⏳ Try again in ${h}h ${m}m.`);
-    }
-    cooldown.set(message.author.id, now);
-  }
 
   try {
     const res = await axios.get(`https://noxxlikeesusano.vercel.app/like?uid=${uid}&server_name=${region}`);
