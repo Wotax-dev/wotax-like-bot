@@ -1,0 +1,19 @@
+# Node modules (don't upload dependencies)
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+logs
+*.log
+
+# Mac system files
+.DS_Store
+
+# VS Code project settings
+.vscode/
+
+# Optional: Ignore test coverage or temp files
+coverage/
+*.tmp
