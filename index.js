@@ -36,7 +36,7 @@ client.on('interactionCreate', async interaction => {
 
   await interaction.deferReply();
   try {
-    const res = await axios.get(`https://noxxlikeesusano.vercel.app/like?uid=${uid}&server_name=${region}`);
+    const res = await axios.get(`https://likee-testing1.vercel.app/like?uid=${uid}&server_name=${region}`);
     const data = res.data;
 
     const embed = new EmbedBuilder()
