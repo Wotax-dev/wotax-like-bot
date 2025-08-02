@@ -17,9 +17,8 @@ const OWNER_IDS = [
   '1150752224956403763'
 ];
 const CHANNEL_IDS = ['1398959087592673370', '1399332860175056987'];
-const DAILY_LIMIT = 2; // <-- Change here for limit per user (non-owner)
+const DAILY_LIMIT = 2;
 
-// Usage tracker: { userId: { count, lastResetTimestamp } }
 const usageMap = new Map();
 
 function checkUsage(userId) {
@@ -30,14 +29,12 @@ function checkUsage(userId) {
     usage = { count: 0, lastReset: now };
     usageMap.set(userId, usage);
   } else {
-    // Reset count if 24h passed
     if (now - usage.lastReset > 24 * 60 * 60 * 1000) {
       usage.count = 0;
       usage.lastReset = now;
     }
   }
 
-  // Return usage info
   const remaining = OWNER_IDS.includes(userId)
     ? 'unlimited'
     : `${DAILY_LIMIT - usage.count}/${DAILY_LIMIT}`;
@@ -55,12 +52,10 @@ function incrementUsage(userId) {
   usage.count++;
 }
 
-// Log bot ready
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-// Handle slash command
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName !== 'like') return;
@@ -80,7 +75,6 @@ client.on('interactionCreate', async interaction => {
     return interaction.reply({ content: 'Region must only contain letters.', ephemeral: true });
   }
 
-  // Check usage limit
   if (!OWNER_IDS.includes(interaction.user.id)) {
     const { usage, remaining } = checkUsage(interaction.user.id);
     if (usage.count >= DAILY_LIMIT) {
@@ -102,7 +96,6 @@ client.on('interactionCreate', async interaction => {
     const data = res.data;
 
     if (data.status === 1) {
-      // Increment usage count for non-owners
       if (!OWNER_IDS.includes(interaction.user.id)) {
         incrementUsage(interaction.user.id);
       }
@@ -115,10 +108,7 @@ client.on('interactionCreate', async interaction => {
         .setThumbnail(interaction.user.displayAvatarURL())
         .addFields(
           { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' },
-          {
-            name: '📊 Daily Limit',
-            value: `\`\`\`Requests remaining: ${remaining}\`\`\``
-          }
+          { name: '📊 Daily Limit', value: `\`\`\`Requests remaining: ${remaining}\`\`\`` }
         )
         .setDescription(
           `💥 **ACCOUNT INFO** 💥\n` +
@@ -154,12 +144,16 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Handle !like message command
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
   const parts = message.content.trim().split(/\s+/);
   if (parts[0] !== '!like') return;
+
+  // ✅ Channel restriction added
+  if (!CHANNEL_IDS.includes(message.channel.id)) {
+    return message.reply('❌ This command is not allowed in this channel.');
+  }
 
   const region = parts[1];
   const uid = parts[2];
@@ -168,7 +162,6 @@ client.on('messageCreate', async message => {
   if (!/^\d+$/.test(uid)) return message.reply('❌ UID must be numeric.');
   if (!/^[a-zA-Z]+$/.test(region)) return message.reply('❌ Region must only contain letters.');
 
-  // Check usage limit
   if (!OWNER_IDS.includes(message.author.id)) {
     const { usage, remaining } = checkUsage(message.author.id);
     if (usage.count >= DAILY_LIMIT) {
@@ -200,10 +193,7 @@ client.on('messageCreate', async message => {
         .setThumbnail(message.author.displayAvatarURL())
         .addFields(
           { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' },
-          {
-            name: '📊 Daily Limit',
-            value: `\`\`\`Requests remaining: ${remaining}\`\`\``
-          }
+          { name: '📊 Daily Limit', value: `\`\`\`Requests remaining: ${remaining}\`\`\`` }
         )
         .setDescription(
           `💥 **ACCOUNT INFO** 💥\n` +
@@ -239,14 +229,12 @@ client.on('messageCreate', async message => {
   }
 });
 
-// Express keep-alive server
 const app = express();
 app.get('/', (req, res) => res.send('Bot is alive!'));
 app.listen(process.env.PORT || 3000, () => {
   console.log('🌐 Keep-alive Express server started.');
 });
 
-// Global error handlers
 process.on('unhandledRejection', err => console.error('Unhandled promise rejection:', err));
 process.on('uncaughtException', err => console.error('Uncaught exception:', err));
 
