@@ -92,7 +92,7 @@ client.on('interactionCreate', async interaction => {
   await interaction.deferReply();
 
   try {
-    const res = await axios.get(`https://noxxcorporation.vercel.app/like?uid=${uid}&server_name=${region}`);
+    const res = await axios.get(`https://likes.api.freefireofficial.com/api/bd/2792480170?key=RebelTheLvB09`);
     const data = res.data;
 
     if (data.status === 1) {
@@ -239,3 +239,4 @@ process.on('unhandledRejection', err => console.error('Unhandled promise rejecti
 process.on('uncaughtException', err => console.error('Uncaught exception:', err));
 
 client.login(process.env.DISCORD_TOKEN);
+
