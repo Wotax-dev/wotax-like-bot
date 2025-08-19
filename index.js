@@ -65,11 +65,15 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (!/^\d+$/.test(uid)) {
-    return interaction.reply({ content: 'UID must be numeric.', ephemeral: true });
+    const temp = await interaction.reply({ content: '❌ UID must be numeric.', ephemeral: true });
+    setTimeout(() => { interaction.deleteReply().catch(() => {}); }, 5000);
+    return;
   }
 
   if (!/^[a-zA-Z]+$/.test(region)) {
-    return interaction.reply({ content: 'Region must only contain letters.', ephemeral: true });
+    const temp = await interaction.reply({ content: '❌ Region must only contain letters.', ephemeral: true });
+    setTimeout(() => { interaction.deleteReply().catch(() => {}); }, 5000);
+    return;
   }
 
   if (!OWNER_IDS.includes(interaction.user.id)) {
@@ -82,22 +86,27 @@ client.on('interactionCreate', async interaction => {
         .setImage('https://i.imgur.com/xzUP5cS.gif')
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
         .setTimestamp();
-      return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      const msg = await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+      setTimeout(() => { interaction.deleteReply().catch(() => {}); }, 5000);
+      return;
     }
   }
 
   await interaction.deferReply();
 
   try {
-    // ✅ Updated API
     const res = await axios.get(`https://likes.api.freefireofficial.com/api/bd/${uid}?key=RebelTheLvB09`);
     const data = res.data;
 
     if (data.status === 1) {
       const player = data.response;
 
-      if (!OWNER_IDS.includes(interaction.user.id)) {
-        incrementUsage(interaction.user.id);
+      if (!OWNER_IDS.includes(interaction.user.id)) incrementUsage(interaction.user.id);
+
+      if (player.LikesGivenByAPI === 0) {
+        const temp = await interaction.editReply('❗ Max likes already sent for today. Try again tomorrow.');
+        setTimeout(() => { interaction.deleteReply().catch(() => {}); }, 5000);
+        return;
       }
 
       const embed = new EmbedBuilder()
@@ -116,18 +125,15 @@ client.on('interactionCreate', async interaction => {
           `**Before**: ${player.LikesbeforeCommand}\n` +
           `**After**: ${player.LikesafterCommand}`
         )
-        .addFields(
-          { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' }
-        )
+        .addFields({ name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' })
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
         .setTimestamp();
 
       await interaction.editReply({ embeds: [embed] });
 
-    } else if (data.status === 2) {
-      await interaction.editReply('❗ You already claimed likes for today. Try again tomorrow.');
     } else {
-      await interaction.editReply('❗ Unknown status returned from the API.');
+      const temp = await interaction.editReply('❗ Unknown status returned from the API.');
+      setTimeout(() => { interaction.deleteReply().catch(() => {}); }, 5000);
     }
   } catch (err) {
     const errorEmbed = new EmbedBuilder()
@@ -139,7 +145,8 @@ client.on('interactionCreate', async interaction => {
       .addFields({ name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' })
       .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
       .setTimestamp();
-    await interaction.editReply({ embeds: [errorEmbed] });
+    const msg = await interaction.editReply({ embeds: [errorEmbed] });
+    setTimeout(() => { interaction.deleteReply().catch(() => {}); }, 5000);
   }
 });
 
@@ -151,15 +158,29 @@ client.on('messageCreate', async message => {
   if (parts[0] !== '!like') return;
 
   if (!CHANNEL_IDS.includes(message.channel.id)) {
-    return message.reply('❌ This command is not allowed in this channel.');
+    const temp = await message.reply('❌ This command is not allowed in this channel.');
+    setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
+    return;
   }
 
   const region = parts[1];
   const uid = parts[2];
 
-  if (!region || !uid) return message.reply('❌ Usage: `!like <region> <uid>`');
-  if (!/^\d+$/.test(uid)) return message.reply('❌ UID must be numeric.');
-  if (!/^[a-zA-Z]+$/.test(region)) return message.reply('❌ Region must only contain letters.');
+  if (!region || !uid) {
+    const temp = await message.reply('❌ Usage: `!like <region> <uid>`');
+    setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
+    return;
+  }
+  if (!/^\d+$/.test(uid)) {
+    const temp = await message.reply('❌ UID must be numeric.');
+    setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
+    return;
+  }
+  if (!/^[a-zA-Z]+$/.test(region)) {
+    const temp = await message.reply('❌ Region must only contain letters.');
+    setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
+    return;
+  }
 
   if (!OWNER_IDS.includes(message.author.id)) {
     const usage = checkUsage(message.author.id);
@@ -171,20 +192,25 @@ client.on('messageCreate', async message => {
         .setImage('https://i.imgur.com/xzUP5cS.gif')
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
         .setTimestamp();
-      return message.reply({ embeds: [errorEmbed] });
+      const temp = await message.reply({ embeds: [errorEmbed] });
+      setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
+      return;
     }
   }
 
   try {
-    // ✅ Updated API
     const res = await axios.get(`https://likes.api.freefireofficial.com/api/bd/${uid}?key=RebelTheLvB09`);
     const data = res.data;
 
     if (data.status === 1) {
       const player = data.response;
 
-      if (!OWNER_IDS.includes(message.author.id)) {
-        incrementUsage(message.author.id);
+      if (!OWNER_IDS.includes(message.author.id)) incrementUsage(message.author.id);
+
+      if (player.LikesGivenByAPI === 0) {
+        const temp = await message.reply('❗ Max likes already sent for today. Try again tomorrow.');
+        setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
+        return;
       }
 
       const embed = new EmbedBuilder()
@@ -203,18 +229,15 @@ client.on('messageCreate', async message => {
           `**Before**: ${player.LikesbeforeCommand}\n` +
           `**After**: ${player.LikesafterCommand}`
         )
-        .addFields(
-          { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' }
-        )
+        .addFields({ name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' })
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
         .setTimestamp();
 
       await message.reply({ embeds: [embed] });
 
-    } else if (data.status === 2) {
-      await message.reply('❗ You already claimed likes for today. Try again tomorrow.');
     } else {
-      await message.reply('❗ Unknown status returned from the API.');
+      const temp = await message.reply('❗ Unknown status returned from the API.');
+      setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
     }
   } catch (err) {
     const errorEmbed = new EmbedBuilder()
@@ -226,7 +249,8 @@ client.on('messageCreate', async message => {
       .addFields({ name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' })
       .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
       .setTimestamp();
-    await message.reply({ embeds: [errorEmbed] });
+    const temp = await message.reply({ embeds: [errorEmbed] });
+    setTimeout(() => { temp.delete().catch(() => {}); message.delete().catch(() => {}); }, 5000);
   }
 });
 
