@@ -35,11 +35,7 @@ function checkUsage(userId) {
     }
   }
 
-  const remaining = OWNER_IDS.includes(userId)
-    ? 'unlimited'
-    : `${DAILY_LIMIT - usage.count}/${DAILY_LIMIT}`;
-
-  return { usage, remaining };
+  return usage;
 }
 
 function incrementUsage(userId) {
@@ -56,6 +52,7 @@ client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
+// Slash command /like
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName !== 'like') return;
@@ -76,11 +73,11 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (!OWNER_IDS.includes(interaction.user.id)) {
-    const { usage, remaining } = checkUsage(interaction.user.id);
+    const usage = checkUsage(interaction.user.id);
     if (usage.count >= DAILY_LIMIT) {
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ DAILY LIMIT REACHED')
-        .setDescription(`You have used all your likes for today.\n\n**Requests remaining:** \`\`\`0/${DAILY_LIMIT}\`\`\`\n\nTry again tomorrow!\n\n🔗 Join My Server: https://discord.gg/9yCkYfh3Nh`)
+        .setDescription(`You have used all your likes for today.\n\nTry again tomorrow!\n\n🔗 Join My Server: https://discord.gg/9yCkYfh3Nh`)
         .setColor('#8B0000')
         .setImage('https://i.imgur.com/xzUP5cS.gif')
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
@@ -92,33 +89,35 @@ client.on('interactionCreate', async interaction => {
   await interaction.deferReply();
 
   try {
-    const res = await axios.get(`https://likes.api.freefireofficial.com/api/bd/2792480170?key=RebelTheLvB09`);
+    // ✅ Updated API
+    const res = await axios.get(`https://likes.api.freefireofficial.com/api/bd/${uid}?key=RebelTheLvB09`);
     const data = res.data;
 
     if (data.status === 1) {
+      const player = data.response;
+
       if (!OWNER_IDS.includes(interaction.user.id)) {
         incrementUsage(interaction.user.id);
       }
-      const { remaining } = checkUsage(interaction.user.id);
 
       const embed = new EmbedBuilder()
         .setTitle('⚡LIKE BOT BY WOTAX⚡')
         .setColor('#00FFFF')
         .setImage('https://i.imgur.com/xzUP5cS.gif')
         .setThumbnail(interaction.user.displayAvatarURL())
-        .addFields(
-          { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' },
-          { name: '📊 Daily Limit', value: `\`\`\`Requests remaining: ${remaining}\`\`\`` }
-        )
         .setDescription(
           `💥 **ACCOUNT INFO** 💥\n` +
-          `**Player Nickname**: ${data.PlayerNickname}\n` +
-          `**Player UID**: ${data.UID}\n` +
-          `**Region**: ${region.toUpperCase()}\n\n` +
+          `**Player Nickname**: ${player.PlayerNickname}\n` +
+          `**Player UID**: ${player.UID}\n` +
+          `**Region**: ${region.toUpperCase()}\n` +
+          `**Level**: ${player.PlayerLevel}\n\n` +
           `📊 **RESULT STATUS**\n` +
-          `**Added**: +${data.LikesGivenByAPI}\n` +
-          `**Before**: ${data.LikesbeforeCommand}\n` +
-          `**After**: ${data.LikesafterCommand}`
+          `**Added**: +${player.LikesGivenByAPI}\n` +
+          `**Before**: ${player.LikesbeforeCommand}\n` +
+          `**After**: ${player.LikesafterCommand}`
+        )
+        .addFields(
+          { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' }
         )
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
         .setTimestamp();
@@ -144,13 +143,13 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
+// Message command !like
 client.on('messageCreate', async message => {
   if (message.author.bot) return;
 
   const parts = message.content.trim().split(/\s+/);
   if (parts[0] !== '!like') return;
 
-  // ✅ Channel restriction added
   if (!CHANNEL_IDS.includes(message.channel.id)) {
     return message.reply('❌ This command is not allowed in this channel.');
   }
@@ -163,11 +162,11 @@ client.on('messageCreate', async message => {
   if (!/^[a-zA-Z]+$/.test(region)) return message.reply('❌ Region must only contain letters.');
 
   if (!OWNER_IDS.includes(message.author.id)) {
-    const { usage, remaining } = checkUsage(message.author.id);
+    const usage = checkUsage(message.author.id);
     if (usage.count >= DAILY_LIMIT) {
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ DAILY LIMIT REACHED')
-        .setDescription(`You have used all your likes for today.\n\n**Requests remaining:** \`\`\`0/${DAILY_LIMIT}\`\`\`\n\nTry again tomorrow!\n\n🔗 Join My Server: https://discord.gg/9yCkYfh3Nh`)
+        .setDescription(`You have used all your likes for today.\n\nTry again tomorrow!\n\n🔗 Join My Server: https://discord.gg/9yCkYfh3Nh`)
         .setColor('#8B0000')
         .setImage('https://i.imgur.com/xzUP5cS.gif')
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
@@ -177,33 +176,35 @@ client.on('messageCreate', async message => {
   }
 
   try {
-    const res = await axios.get(`https://noxxcorporation.vercel.app/like?uid=${uid}&server_name=${region}`);
+    // ✅ Updated API
+    const res = await axios.get(`https://likes.api.freefireofficial.com/api/bd/${uid}?key=RebelTheLvB09`);
     const data = res.data;
 
     if (data.status === 1) {
+      const player = data.response;
+
       if (!OWNER_IDS.includes(message.author.id)) {
         incrementUsage(message.author.id);
       }
-      const { remaining } = checkUsage(message.author.id);
 
       const embed = new EmbedBuilder()
         .setTitle('⚡LIKE BOT BY WOTAX⚡')
         .setColor('#00FFFF')
         .setImage('https://i.imgur.com/xzUP5cS.gif')
         .setThumbnail(message.author.displayAvatarURL())
-        .addFields(
-          { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' },
-          { name: '📊 Daily Limit', value: `\`\`\`Requests remaining: ${remaining}\`\`\`` }
-        )
         .setDescription(
           `💥 **ACCOUNT INFO** 💥\n` +
-          `**Player Nickname**: ${data.PlayerNickname}\n` +
-          `**Player UID**: ${data.UID}\n` +
-          `**Region**: ${region.toUpperCase()}\n\n` +
+          `**Player Nickname**: ${player.PlayerNickname}\n` +
+          `**Player UID**: ${player.UID}\n` +
+          `**Region**: ${region.toUpperCase()}\n` +
+          `**Level**: ${player.PlayerLevel}\n\n` +
           `📊 **RESULT STATUS**\n` +
-          `**Added**: +${data.LikesGivenByAPI}\n` +
-          `**Before**: ${data.LikesbeforeCommand}\n` +
-          `**After**: ${data.LikesafterCommand}`
+          `**Added**: +${player.LikesGivenByAPI}\n` +
+          `**Before**: ${player.LikesbeforeCommand}\n` +
+          `**After**: ${player.LikesafterCommand}`
+        )
+        .addFields(
+          { name: '🔗 Join My Server', value: 'https://discord.gg/9yCkYfh3Nh' }
         )
         .setFooter({ text: '🕷️ DEVELOPED BY WOTAX 🕷️' })
         .setTimestamp();
@@ -239,4 +240,3 @@ process.on('unhandledRejection', err => console.error('Unhandled promise rejecti
 process.on('uncaughtException', err => console.error('Uncaught exception:', err));
 
 client.login(process.env.DISCORD_TOKEN);
-
